@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ed">
+  <title>Weihnachtsmarkt · Standplan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17241d;
+      --muted: #6f786f;
+      --paper: #f5f3ed;
+      --card: #fffefa;
+      --line: #e5e3da;
+      --green: #214f3a;
+      --green-light: #e5efe5;
+      --shadow: 0 12px 32px rgb(34 47 37 / 7%);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 14px/1.45 "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .48; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 30px; background: #fffefa; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { display: grid; place-items: center; width: 40px; height: 40px; color: #fff; background: var(--green); border-radius: 12px; font-size: 21px; }
+    .brand-name { font-size: 15px; font-weight: 750; letter-spacing: -.02em; }
+    .brand-subtitle { margin-top: 1px; color: var(--muted); font-size: 12px; }
+    .top-actions { display: flex; gap: 9px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; padding: 8px 13px; color: var(--ink); background: #fffefa; border: 1px solid var(--line); border-radius: 9px; font-weight: 650; transition: background .15s, border-color .15s, transform .15s; }
+    .button:hover:not(:disabled) { background: #f5f3ed; border-color: #c7c9bd; }
+    .button:active:not(:disabled) { transform: translateY(1px); }
+    .button-primary { color: white; background: var(--green); border-color: var(--green); }
+    .button-primary:hover:not(:disabled) { color: white; background: #183e2d; border-color: #183e2d; }
+    .button-quiet { min-height: 32px; padding: 5px 9px; font-size: 12px; }
+    main { max-width: 1540px; margin: 0 auto; padding: 25px 28px 36px; }
+    .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+    .eyebrow { margin-bottom: 5px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(24px, 3vw, 34px); line-height: 1.12; letter-spacing: -.04em; }
+    .intro-copy { max-width: 565px; margin: 7px 0 0; color: var(--muted); }
+    .local-note { flex: 0 0 auto; padding: 7px 11px; color: #5c695e; background: #e9eee5; border-radius: 999px; font-size: 11px; font-weight: 650; }
+    .workspace { display: grid; grid-template-columns: minmax(330px, 390px) minmax(0, 1fr); gap: 19px; align-items: start; }
+    .panel, .map-card { background: var(--card); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); }
+    .sidebar { min-width: 0; overflow: hidden; }
+    .side-section { padding: 17px 18px; border-bottom: 1px solid var(--line); }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
+    .section-heading h2 { margin: 0; font-size: 14px; letter-spacing: -.01em; }
+    .step { display: grid; place-items: center; width: 23px; height: 23px; color: var(--green); background: var(--green-light); border-radius: 50%; font-size: 11px; font-weight: 800; }
+    .upload-box { display: block; padding: 14px 13px; text-align: center; background: #fbfaf6; border: 1px dashed #b6c1b2; border-radius: 11px; cursor: pointer; }
+    .upload-box:hover, .upload-box.is-over { background: #f0f5ed; border-color: var(--green); }
+    .upload-icon { margin-bottom: 3px; font-size: 20px; }
+    .upload-title { font-weight: 700; }
+    .upload-hint { margin-top: 3px; color: var(--muted); font-size: 11px; }
+    #csv-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+    .file-status { margin-top: 8px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+    .message { display: none; margin-top: 10px; padding: 9px 10px; border-radius: 8px; font-size: 12px; }
+    .message.is-visible { display: block; }
+    .message-error { color: #8d3428; background: #fbe9e5; }
+    .message-success { color: #285d3d; background: #e7f2e7; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .summary-item { padding: 9px 10px; background: #f5f4ee; border-radius: 9px; }
+    .summary-number { font-size: 20px; font-weight: 760; line-height: 1.1; }
+    .summary-label { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .list-toolbar { display: grid; gap: 9px; }
+    .search { width: 100%; min-height: 36px; padding: 8px 11px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 8px; outline: none; }
+    .search:focus, select:focus-visible, button:focus-visible, .upload-box:focus-within { outline: 2px solid #6f9c77; outline-offset: 2px; }
+    .filter-row { display: flex; gap: 5px; }
+    .filter-button { flex: 1; min-height: 30px; padding: 5px 7px; color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 7px; font-size: 11px; font-weight: 650; }
+    .filter-button:hover { background: #f5f4ee; }
+    .filter-button.is-active { color: var(--green); background: var(--green-light); border-color: #d3e2d4; }
+    .list-heading { margin: 16px 0 7px; color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .stand-list { display: grid; gap: 7px; max-height: 470px; overflow: auto; padding-right: 3px; }
+    .stand-card { padding: 10px 10px 9px; background: #fff; border: 1px solid var(--line); border-radius: 10px; cursor: grab; }
+    .stand-card:active { cursor: grabbing; }
+    .stand-card.is-assigned { border-color: #c9d9c9; }
+    .stand-card.is-selected { box-shadow: 0 0 0 2px #8cab8f; }
+    .stand-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .stand-title { overflow-wrap: anywhere; font-weight: 720; font-size: 12px; }
+    .stand-subtitle { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .stand-tag { flex: 0 0 auto; padding: 3px 6px; border-radius: 999px; font-size: 9px; font-weight: 750; }
+    .tag-in { color: #315d44; background: #e7f0e5; }
+    .tag-out { color: #7a541f; background: #f8eedb; }
+    .tag-open { color: #56636c; background: #edf0f1; }
+    .stand-desc { margin-top: 7px; color: #4f5951; font-size: 10px; line-height: 1.35; }
+    .stand-controls { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+    .stand-controls select { min-width: 0; flex: 1; height: 28px; padding: 3px 6px; color: var(--ink); background: #fbfaf6; border: 1px solid var(--line); border-radius: 6px; font-size: 10px; }
+    .status-text { color: var(--muted); font-size: 10px; }
+    .empty-list { padding: 15px 8px; color: var(--muted); text-align: center; font-size: 12px; }
+    .events { padding: 0 18px 16px; }
+    .events summary { padding-top: 15px; color: #56635a; cursor: pointer; font-size: 11px; font-weight: 700; }
+    .event-list { display: grid; gap: 7px; margin-top: 10px; }
+    .event-row { padding: 8px 9px; background: #f7f5ef; border-radius: 8px; }
+    .event-row strong { display: block; font-size: 11px; }
+    .event-row span { color: var(--muted); font-size: 10px; }
+    .map-card { min-width: 0; overflow: hidden; }
+    .map-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 17px; border-bottom: 1px solid var(--line); }
+    .map-title { margin: 0; font-size: 14px; font-weight: 740; }
+    .map-subtitle { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .map-actions { display: flex; gap: 7px; }
+    .map-wrap { position: relative; width: 100%; aspect-ratio: 1311 / 908; overflow: hidden; background: #e7e8df; container-type: inline-size; }
+    .map-canvas { position: absolute; inset: 0; transform: scale(1.8); transform-origin: 55% 0; }
+    .map-image { display: block; width: 100%; height: 100%; object-fit: fill; user-select: none; }
+    .zone { position: absolute; display: flex; align-items: flex-start; justify-content: center; border: 2px solid; border-radius: 8px; transition: background .15s, box-shadow .15s; }
+    .zone[data-zone="outdoor"] { left: 50.95%; top: 3.75%; width: 17.4%; height: 52.3%; background: rgb(229 177 78 / 13%); border-color: rgb(171 119 35 / 83%); }
+    .zone[data-zone="indoor"] { left: 29.9%; top: 32.5%; width: 14.35%; height: 21.5%; background: rgb(83 152 108 / 14%); border-color: rgb(49 110 70 / 83%); }
+    .zone.is-over { background: rgb(213 164 72 / 28%); box-shadow: inset 0 0 0 3px rgb(255 255 255 / 55%); }
+    .zone[data-zone="indoor"].is-over { background: rgb(83 152 108 / 28%); }
+    .zone-heading { position: absolute; z-index: 2; top: -34px; left: 0; max-width: calc(100% - 8px); padding: 3px 7px; color: #fff; background: rgb(65 83 63 / 88%); border-radius: 5px; font-size: clamp(8px, .75vw, 11px); font-weight: 750; text-align: center; white-space: nowrap; pointer-events: none; }
+    .zone[data-zone="outdoor"] .zone-heading { top: -18px; right: 0; bottom: auto; left: auto; }
+    .zone[data-zone="outdoor"] .zone-heading { background: rgb(126 86 31 / 90%); }
+    .zone-size { display: block; font-size: .82em; font-weight: 550; opacity: .9; }
+    .marker { position: absolute; z-index: 1; display: grid; place-items: center; width: clamp(16px, 1.65cqw, 22px); height: clamp(16px, 1.65cqw, 22px); padding: 0; color: white; background: #245c40; border: 2px solid #fff; border-radius: 6px; box-shadow: 0 2px 6px rgb(0 0 0 / 28%); font-size: clamp(6px, .55cqw, 8px); font-weight: 800; cursor: grab; transform: translate(-50%, -50%); }
+    .marker[data-zone="outdoor"] { background: #a56d24; }
+    .marker:hover, .marker.is-selected { z-index: 3; outline: 2px solid #fff; outline-offset: 1px; }
+    .marker:active { cursor: grabbing; }
+    .map-empty { position: absolute; z-index: 4; left: 50%; bottom: 14px; max-width: min(390px, calc(100% - 24px)); padding: 9px 13px; color: #425046; background: rgb(255 254 250 / 94%); border: 1px solid rgb(255 255 255 / 90%); border-radius: 9px; box-shadow: 0 5px 14px rgb(26 39 29 / 12%); text-align: center; font-size: 11px; transform: translateX(-50%); }
+    .map-empty[hidden] { display: none; }
+    .map-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; padding: 10px 16px; color: var(--muted); border-top: 1px solid var(--line); font-size: 10px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 9px; height: 9px; background: #245c40; border-radius: 3px; }
+    .legend-dot.outdoor { background: #a56d24; }
+    .legend-notes { margin-left: auto; }
+    .map-help { padding: 11px 16px 13px; color: #667167; background: #faf9f4; border-top: 1px solid var(--line); font-size: 11px; }
+    .map-help strong { color: #405347; }
+    .footer-note { margin: 13px 3px 0; color: #7c8279; font-size: 10px; }
+    @media (max-width: 980px) {
+      main { padding: 20px 16px 30px; }
+      .workspace { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 12px; }
+      .topbar { padding-right: 18px; padding-left: 18px; }
+      .side-section { padding: 14px; }
+      .events { padding-right: 14px; padding-left: 14px; }
+      .map-toolbar { padding: 13px; }
+      .map-legend { gap: 9px; padding-right: 12px; padding-left: 12px; }
+    }
+    @media (max-width: 720px) {
+      .topbar { align-items: flex-start; padding: 13px 14px; }
+      .top-actions { flex-wrap: wrap; justify-content: flex-end; }
+      .top-actions .button { min-height: 34px; padding: 6px 9px; font-size: 11px; }
+      main { padding: 17px 11px 24px; }
+      .intro { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+      .workspace { grid-template-columns: 1fr; }
+      .map-card { grid-row: 1; }
+      .map-toolbar { flex-wrap: wrap; }
+      .map-actions { margin-left: auto; }
+      .zone-heading { font-size: 8px; }
+      .stand-list { max-height: 400px; }
+    }
+    @media print {
+      body { background: white; }
+      .topbar, .intro, .sidebar, .map-actions, .map-help, .footer-note { display: none !important; }
+      main { max-width: none; padding: 0; }
+      .workspace { display: block; }
+      .map-card { border: 0; box-shadow: none; }
+      .map-toolbar { padding: 0 0 8px; }
+      .map-wrap { width: 100%; }
+      .map-legend { padding-left: 0; }
+      .zone, .marker { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">✦</div>
+      <div><div class="brand-name">Weihnachtsmarkt</div><div class="brand-subtitle">Standplanung · Wilhelm-Bracke-Gesamtschule</div></div>
+    </div>
+    <div class="top-actions">
+      <button class="button" id="print-button" type="button">Drucken</button>
+      <button class="button button-primary" id="export-button" type="button" disabled>Plan als CSV exportieren</button>
+    </div>
+  </header>
+  <main>
+    <section class="intro">
+      <div>
+        <div class="eyebrow">Gemeinsam planen</div>
+        <h1>Der Standplan</h1>
+        <p class="intro-copy">Stände aus der CSV importieren, passend zu ihren Wünschen verteilen und direkt im Lageplan verschieben.</p>
+      </div>
+      <div class="local-note">🔒 Daten bleiben auf diesem Gerät</div>
+    </section>
+    <div class="workspace">
+      <aside class="panel sidebar" aria-label="Stände und Import">
+        <section class="side-section">
+          <div class="section-heading"><h2>Stände importieren</h2><span class="step" aria-hidden="true">1</span></div>
+          <label class="upload-box" id="upload-box" for="csv-file">
+            <div class="upload-icon" aria-hidden="true">↥</div>
+            <div class="upload-title">CSV-Datei auswählen</div>
+            <div class="upload-hint">Datei hier ablegen · UTF-8 oder Excel-CSV</div>
+          </label>
+          <input id="csv-file" type="file" accept=".csv,text/csv">
+          <div class="file-status" id="file-status">Noch keine Datei geladen. Die CSV wird nur in diesem Browser verarbeitet.</div>
+          <div class="message" id="message" role="status" aria-live="polite"></div>
+        </section>
+        <section class="side-section">
+          <div class="section-heading"><h2>Überblick</h2><span class="step" aria-hidden="true">2</span></div>
+          <div class="summary-grid" aria-live="polite">
+            <div class="summary-item"><div class="summary-number" id="count-total">0</div><div class="summary-label">Stände</div></div>
+            <div class="summary-item"><div class="summary-number" id="count-assigned">0</div><div class="summary-label">Im Plan</div></div>
+            <div class="summary-item"><div class="summary-number" id="count-open">0</div><div class="summary-label">Offen</div></div>
+          </div>
+        </section>
+        <section class="side-section">
+          <div class="section-heading"><h2>Standliste</h2><button class="button button-quiet" id="auto-button" type="button" disabled>Automatisch verteilen</button></div>
+          <div class="list-toolbar">
+            <input class="search" id="search-input" type="search" placeholder="Stand, Klasse oder Beitrag suchen" aria-label="Stände durchsuchen">
+            <div class="filter-row" role="group" aria-label="Standliste filtern">
+              <button class="filter-button is-active" data-filter="all" type="button">Alle</button>
+              <button class="filter-button" data-filter="indoor" type="button">Innen</button>
+              <button class="filter-button" data-filter="outdoor" type="button">Außen</button>
+              <button class="filter-button" data-filter="open" type="button">Offen</button>
+            </div>
+          </div>
+          <div class="list-heading" id="list-heading">Stände · 0</div>
+          <div class="stand-list" id="stand-list"><div class="empty-list">Lade eine CSV-Datei, um die Standliste zu erstellen.</div></div>
+        </section>
+        <details class="events" id="events-details" hidden><summary id="events-summary">Programmpunkte · 0</summary><div class="event-list" id="event-list"></div></details>
+      </aside>
+      <section class="map-card" aria-label="Interaktiver Lageplan">
+        <div class="map-toolbar">
+          <div><h2 class="map-title">Lageplan der Schule</h2><div class="map-subtitle">Stände per Ziehen verschieben · Flächen anklicken zum Zuweisen</div></div>
+          <div class="map-actions"><button class="button button-quiet" id="clear-button" type="button" disabled>Plan leeren</button></div>
+        </div>
+        <div class="map-wrap" id="map-wrap">
+          <div class="map-canvas">
+            <img class="map-image" src="schule.png" alt="Luftbild der Wilhelm-Bracke-Gesamtschule, Ausschnitt mit Innenhof und Innenraum">
+            <div class="zone" data-zone="outdoor" aria-label="Innenhof, 24 mal 46 Meter"><div class="zone-heading">Innenhof <span class="zone-size">24 × 46 m</span></div></div>
+            <div class="zone" data-zone="indoor" aria-label="Innenraum, 20 mal 20 Meter"><div class="zone-heading">Innenraum <span class="zone-size">20 × 20 m</span></div></div>
+          </div>
+          <div class="map-empty" id="map-empty">CSV laden und Stände automatisch verteilen oder per Ziehen platzieren.</div>
+        </div>
+        <div class="map-legend">
+          <span class="legend-item"><span class="legend-dot"></span>Innenraum</span>
+          <span class="legend-item"><span class="legend-dot outdoor"></span>Innenhof</span>
+          <span class="legend-notes">Standgröße ca. 2 × 1 m</span>
+        </div>
+        <div class="map-help"><strong>Tipp:</strong> Stände in der Liste können per Auswahl zugewiesen oder direkt auf die gewünschte Fläche gezogen werden. Im Plan lassen sie sich anschließend verschieben.</div>
+      </section>
+    </div>
+    <p class="footer-note">Die Lage der Flächen ist aus der bereitgestellten Maske abgeleitet. Die Standpositionen sind eine Planungshilfe und vor Ort zu prüfen.</p>
+  </main>
+  <script>
+    "use strict";
+    (() => {
+      const zoneInfo = {
+        indoor: { label: "Innenraum", capacity: 32, metersX: 20, metersY: 20 },
+        outdoor: { label: "Innenhof", capacity: 30, metersX: 24, metersY: 46 }
+      };
+      const state = { records: [], delimiter: ",", csvHeaders: [], filter: "all", selectedId: null };
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+      const standList = $("#stand-list");
+      const mapWrap = $("#map-wrap");
+      const message = $("#message");
+
+      function normalize(value) {
+        return String(value ?? "").toLocaleLowerCase("de").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function parseCsv(text) {
+        const content = text.replace(/^\uFEFF/, "");
+        const firstLine = content.split(/\r\n|\n|\r/, 1)[0] || "";
+        let commas = 0;
+        let semicolons = 0;
+        let quoted = false;
+        for (let index = 0; index < firstLine.length; index += 1) {
+          if (firstLine[index] === '"') {
+            if (quoted && firstLine[index + 1] === '"') index += 1;
+            else quoted = !quoted;
+          } else if (!quoted && firstLine[index] === ",") commas += 1;
+          else if (!quoted && firstLine[index] === ";") semicolons += 1;
+        }
+        const delimiter = semicolons > commas ? ";" : ",";
+        const rows = [];
+        let row = [];
+        let field = "";
+        quoted = false;
+        for (let index = 0; index < content.length; index += 1) {
+          const character = content[index];
+          if (quoted) {
+            if (character === '"' && content[index + 1] === '"') { field += '"'; index += 1; }
+            else if (character === '"') quoted = false;
+            else field += character;
+          } else if (character === '"') quoted = true;
+          else if (character === delimiter) { row.push(field); field = ""; }
+          else if (character === "\n" || character === "\r") {
+            if (character === "\r" && content[index + 1] === "\n") index += 1;
+            row.push(field);
+            if (row.some(cell => cell.trim() !== "")) rows.push(row);
+            row = [];
+            field = "";
+          } else field += character;
+        }
+        row.push(field);
+        if (row.some(cell => cell.trim() !== "")) rows.push(row);
+        if (rows.length < 2) throw new Error("Die Datei enthält keine Datenzeilen.");
+        return { headers: rows[0].map(header => header.trim()), rows: rows.slice(1), delimiter };
+      }
+
+      function headerIndex(headers, candidates) {
+        const normalizedHeaders = headers.map(normalize);
+        const normalizedCandidates = candidates.map(normalize);
+        return normalizedHeaders.findIndex(header => normalizedCandidates.includes(header));
+      }
+
+      function readCell(row, index) { return index >= 0 ? (row[index] || "").trim() : ""; }
+
+      function classify(record) {
+        const contribution = normalize(record.contribution);
+        const activity = /auffuhrung|theaterstuck|weihnachtslieder|cheerdance|tanz und bewegung/.test(contribution);
+        const hasBooth = /verkauf|basteln|bastel|cafe|bar|kakao|waffel|popcorn|muffin|schmalzkuchen|buttons|fotobox|stand|tombola|kekse|schminken|second-hand|punsch|brat|marmelade|giess|gussfiguren|holzprodukte|backmischung|kunstpostkarten|weihnachtskegeln|sitzsack/.test(contribution);
+        record.isEvent = activity && !hasBooth;
+        const preference = normalize(record.preference);
+        if (/drau(?:ß|ss)en/.test(preference) && /drinnen/.test(preference)) {
+          record.requestedZone = "";
+          return;
+        }
+        if (/draußen|draussen|hof|marktplatz/.test(preference)) record.requestedZone = "outdoor";
+        else if (/drinnen|innen|raum|foyer|mensa|klassenraum/.test(preference)) record.requestedZone = "indoor";
+        else record.requestedZone = "";
+      }
+
+      function showMessage(text, kind) {
+        message.textContent = text;
+        message.className = `message is-visible message-${kind}`;
+      }
+
+      function importCsv(file) {
+        if (!file) return;
+        if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") {
+          showMessage("Bitte eine CSV-Datei auswählen.", "error");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => showMessage("Die Datei konnte nicht gelesen werden. Bitte erneut auswählen.", "error");
+        reader.onload = () => {
+          try {
+            const parsed = parseCsv(String(reader.result || ""));
+            const indices = {
+              area: headerIndex(parsed.headers, ["bereich", "jahrgang"]),
+              name: headerIndex(parsed.headers, ["klasse_kurs", "klasse", "kurs", "gruppe"]),
+              code: headerIndex(parsed.headers, ["kuerzel", "kürzel", "lehrkraft"]),
+              contribution: headerIndex(parsed.headers, ["beitrag", "angebot", "stand"]),
+              preference: headerIndex(parsed.headers, ["standortpraeferenz", "standortpräferenz", "standort", "praeferenz", "präferenz"]),
+              materials: headerIndex(parsed.headers, ["material", "materialien"]),
+              power: headerIndex(parsed.headers, ["strom"]),
+              notes: headerIndex(parsed.headers, ["anmerkung", "anmerkungen", "hinweis"]),
+              allergies: headerIndex(parsed.headers, ["allergien_unvertraeglichkeiten", "allergien", "unvertraeglichkeiten", "unverträglichkeiten"])
+            };
+            if (indices.contribution < 0 || (indices.name < 0 && indices.area < 0)) {
+              throw new Error("Spalten für Beitrag/Angebot und Klasse/Kurs oder Bereich wurden nicht erkannt.");
+            }
+            const records = parsed.rows.map((row, index) => {
+              const record = {
+                id: `stand-${index}-${Math.random().toString(36).slice(2, 8)}`,
+                sourceRow: row,
+                area: readCell(row, indices.area),
+                name: readCell(row, indices.name),
+                code: readCell(row, indices.code),
+                contribution: readCell(row, indices.contribution),
+                preference: readCell(row, indices.preference),
+                materials: readCell(row, indices.materials),
+                power: readCell(row, indices.power),
+                notes: readCell(row, indices.notes),
+                allergies: readCell(row, indices.allergies),
+                assignment: null
+              };
+              classify(record);
+              return record;
+            });
+            if (!records.some(record => record.contribution)) throw new Error("Es wurden keine Beiträge in der Datei gefunden.");
+            state.records = records.filter(record => record.contribution);
+            state.delimiter = parsed.delimiter;
+            state.csvHeaders = parsed.headers;
+            state.selectedId = null;
+            $("#file-status").textContent = `${file.name} · ${state.records.length} Einträge geladen`;
+            $("#export-button").disabled = false;
+            $("#auto-button").disabled = false;
+            $("#clear-button").disabled = false;
+            render();
+            const standCount = state.records.filter(record => !record.isEvent).length;
+            const eventCount = state.records.filter(record => record.isEvent).length;
+            showMessage(`${standCount} Stände und ${eventCount} Programmpunkte erkannt.`, "success");
+          } catch (error) {
+            showMessage(error.message || "Die CSV-Datei konnte nicht ausgewertet werden.", "error");
+          }
+        };
+        reader.readAsText(file, "UTF-8");
+      }
+
+      function visibleRecords() {
+        const query = normalize($("#search-input").value.trim());
+        return state.records.filter(record => {
+          if (record.isEvent) return false;
+          const assignedZone = record.assignment?.zone || "";
+          if (state.filter === "indoor" && assignedZone !== "indoor" && record.requestedZone !== "indoor") return false;
+          if (state.filter === "outdoor" && assignedZone !== "outdoor" && record.requestedZone !== "outdoor") return false;
+          if (state.filter === "open" && record.assignment) return false;
+          if (!query) return true;
+          return normalize([record.area, record.name, record.code, record.contribution, record.preference].join(" ")).includes(query);
+        });
+      }
+
+      function render() {
+        const stands = state.records.filter(record => !record.isEvent);
+        const assignedCount = stands.filter(record => record.assignment).length;
+        $("#count-total").textContent = stands.length;
+        $("#count-assigned").textContent = assignedCount;
+        $("#count-open").textContent = stands.length - assignedCount;
+        $("#list-heading").textContent = `Stände · ${visibleRecords().length}${stands.length ? ` von ${stands.length}` : ""}`;
+        renderStandList();
+        renderMap();
+        renderEvents();
+        $("#map-empty").hidden = assignedCount > 0;
+      }
+
+      function renderStandList() {
+        const records = visibleRecords();
+        standList.replaceChildren();
+        if (!records.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-list";
+          empty.textContent = state.records.length ? "Keine passenden Stände gefunden." : "Lade eine CSV-Datei, um die Standliste zu erstellen.";
+          standList.append(empty);
+          return;
+        }
+        for (const record of records) standList.append(createStandCard(record));
+      }
+
+      function selectStand(record, revealInList = false) {
+        state.selectedId = state.selectedId === record.id && !revealInList ? null : record.id;
+        if (revealInList) {
+          state.filter = "all";
+          $("#search-input").value = "";
+          $$(".filter-button").forEach(button => button.classList.toggle("is-active", button.dataset.filter === "all"));
+        }
+        render();
+        if (revealInList) {
+          requestAnimationFrame(() => {
+            const card = $(`.stand-card[data-id="${record.id}"]`, standList);
+            if (!card) return;
+            card.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            card.focus({ preventScroll: true });
+          });
+        }
+      }
+
+      function createStandCard(record) {
+        const card = document.createElement("article");
+        card.className = `stand-card${record.assignment ? " is-assigned" : ""}${state.selectedId === record.id ? " is-selected" : ""}`;
+        card.draggable = true;
+        card.dataset.id = record.id;
+        card.tabIndex = 0;
+        card.setAttribute("aria-label", `${record.contribution}, ${record.name || record.area || "Stand"}`);
+        card.addEventListener("dragstart", event => {
+          event.dataTransfer.setData("text/plain", record.id);
+          event.dataTransfer.effectAllowed = "move";
+        });
+        card.addEventListener("click", event => {
+          if (event.target.closest("select")) return;
+          selectStand(record);
+        });
+        card.addEventListener("keydown", event => {
+          if (event.target !== card || (event.key !== "Enter" && event.key !== " ")) return;
+          event.preventDefault();
+          selectStand(record);
+        });
+        const top = document.createElement("div");
+        top.className = "stand-card-top";
+        const titleWrap = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "stand-title";
+        title.textContent = record.contribution;
+        const subtitle = document.createElement("div");
+        subtitle.className = "stand-subtitle";
+        subtitle.textContent = [record.area, record.name, record.code].filter(Boolean).join(" · ") || "Ohne Klassenangabe";
+        titleWrap.append(title, subtitle);
+        const intendedZone = record.assignment?.zone || record.requestedZone;
+        const tag = document.createElement("span");
+        tag.className = `stand-tag ${intendedZone === "indoor" ? "tag-in" : intendedZone === "outdoor" ? "tag-out" : "tag-open"}`;
+        tag.textContent = intendedZone ? zoneInfo[intendedZone].label : "Flexibel";
+        top.append(titleWrap, tag);
+        card.append(top);
+        if (record.materials || record.notes || record.power) {
+          const detail = document.createElement("div");
+          detail.className = "stand-desc";
+          detail.textContent = [record.materials ? `Material: ${record.materials}` : "", record.power ? `Strom: ${record.power}` : "", record.notes].filter(Boolean).join(" · ");
+          card.append(detail);
+        }
+        if (record.allergies) {
+          const allergy = document.createElement("div");
+          allergy.className = "stand-desc";
+          allergy.textContent = `Hinweis: ${record.allergies}`;
+          card.append(allergy);
+        }
+        const controls = document.createElement("div");
+        controls.className = "stand-controls";
+        const select = document.createElement("select");
+        select.setAttribute("aria-label", `Standort für ${record.contribution}`);
+        const options = [["", record.assignment ? "Nicht platziert" : "Standort wählen"], ["indoor", "Innenraum"], ["outdoor", "Innenhof"]];
+        for (const [value, label] of options) {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = label;
+          option.selected = value === (record.assignment?.zone || "");
+          select.append(option);
+        }
+        select.addEventListener("change", () => {
+          if (!select.value) record.assignment = null;
+          else placeRecord(record, select.value);
+          render();
+        });
+        controls.append(select);
+        if (record.assignment) {
+          const status = document.createElement("span");
+          status.className = "status-text";
+          status.textContent = "Im Plan";
+          controls.append(status);
+        }
+        card.append(controls);
+        return card;
+      }
+
+      function gridPosition(zone, index, seatCount = zoneInfo[zone].capacity) {
+        const segment = (x1, y1, x2, y2, seats) =>
+          Array.from({ length: seats }, (_, seat) => {
+            const progress = (seat + 0.5) / seats;
+            return { x: x1 + (x2 - x1) * progress, y: y1 + (y2 - y1) * progress };
+          });
+        const interleave = segments => {
+          const positions = [];
+          for (let seat = 0; seat < Math.max(...segments.map(items => items.length)); seat += 1) {
+            for (const items of segments) {
+              if (items[seat]) positions.push(items[seat]);
+            }
+          }
+          return positions;
+        };
+        const positions = zone === "outdoor"
+          ? Array.from({ length: seatCount }, (_, seat) => {
+              const distance = (Math.floor(seat / 2) + 0.5) * 4;
+              const leftSide = seat % 2 === 0;
+              const halfWidthMeters = 12;
+              if (distance <= halfWidthMeters) {
+                return {
+                  x: 50 + (leftSide ? -1 : 1) * (distance / 24) * 76,
+                  y: 88
+                };
+              }
+              return {
+                x: leftSide ? 12 : 88,
+                y: 88 - ((distance - halfWidthMeters) / 46) * 76
+              };
+            })
+          : [
+              ...interleave([
+                segment(12, 88, 12, 12, 6),
+                segment(12, 12, 88, 12, 4),
+                segment(88, 12, 88, 88, 6)
+              ]),
+              ...interleave([
+                segment(30, 90, 30, 30, 6),
+                segment(30, 30, 70, 30, 4),
+                segment(70, 30, 70, 90, 6)
+              ])
+            ];
+        return positions[index];
+      }
+
+      function placeRecord(record, zone, position, automatic = false) {
+        const occupants = state.records.filter(item => item !== record && item.assignment?.zone === zone);
+        const config = zoneInfo[zone];
+        if (!position && occupants.length >= config.capacity) {
+          showMessage(`Im ${config.label} sind alle ${config.capacity} Planplätze belegt.`, "error");
+          return false;
+        }
+        const target = position || gridPosition(zone, occupants.length);
+        if (!target) {
+          showMessage(`Für den ${config.label} ist kein freier Planplatz vorhanden.`, "error");
+          return false;
+        }
+        record.assignment = { zone, ...target, automatic };
+        return true;
+      }
+
+      function renderMap() {
+        $$(".marker", mapWrap).forEach(marker => marker.remove());
+        for (const record of state.records) {
+          if (!record.assignment) continue;
+          const marker = document.createElement("button");
+          marker.type = "button";
+          marker.className = `marker${state.selectedId === record.id ? " is-selected" : ""}`;
+          marker.dataset.zone = record.assignment.zone;
+          marker.dataset.id = record.id;
+          marker.style.left = `${record.assignment.x}%`;
+          marker.style.top = `${record.assignment.y}%`;
+          marker.title = `${record.name || record.area || "Stand"}: ${record.contribution} · ${zoneInfo[record.assignment.zone].label}`;
+          marker.setAttribute("aria-label", marker.title);
+          marker.textContent = shortLabel(record.name || record.code || record.area || record.contribution);
+          marker.draggable = true;
+          marker.addEventListener("click", event => {
+            event.stopPropagation();
+            selectStand(record, true);
+          });
+          marker.addEventListener("dragstart", event => {
+            event.dataTransfer.setData("text/plain", record.id);
+            event.dataTransfer.effectAllowed = "move";
+          });
+          $(`.zone[data-zone="${record.assignment.zone}"]`, mapWrap).append(marker);
+        }
+      }
+
+      function shortLabel(value) {
+        const match = String(value).match(/\d{1,2}\.\d+/);
+        if (match) return match[0].replace(".", "·");
+        return String(value).slice(0, 3).toLocaleUpperCase("de");
+      }
+
+      function renderEvents() {
+        const events = state.records.filter(record => record.isEvent);
+        const details = $("#events-details");
+        details.hidden = events.length === 0;
+        $("#events-summary").textContent = `Programmpunkte · ${events.length} (nicht als Stand verplant)`;
+        const list = $("#event-list");
+        list.replaceChildren();
+        for (const event of events) {
+          const row = document.createElement("div");
+          row.className = "event-row";
+          const title = document.createElement("strong");
+          title.textContent = event.contribution;
+          const subtitle = document.createElement("span");
+          subtitle.textContent = [event.area, event.name, event.preference].filter(Boolean).join(" · ");
+          row.append(title, subtitle);
+          list.append(row);
+        }
+      }
+
+      function autoAssign() {
+        const unassigned = state.records.filter(record => !record.isEvent && !record.assignment);
+        unassigned.sort((first, second) => Number(Boolean(second.requestedZone)) - Number(Boolean(first.requestedZone)));
+        for (const record of unassigned) {
+          let zone = record.requestedZone;
+          if (!zone) {
+            const inside = state.records.filter(item => item.assignment?.zone === "indoor").length;
+            const outside = state.records.filter(item => item.assignment?.zone === "outdoor").length;
+            zone = inside <= outside ? "indoor" : "outdoor";
+          }
+          const capacity = zoneInfo[zone].capacity;
+          const occupied = state.records.filter(item => item.assignment?.zone === zone).length;
+          if (occupied >= capacity && !record.requestedZone) zone = zone === "indoor" ? "outdoor" : "indoor";
+          if (!placeRecord(record, zone, undefined, true)) {
+            const otherZone = zone === "indoor" ? "outdoor" : "indoor";
+            if (!placeRecord(record, otherZone, undefined, true)) {
+              showMessage("Nicht alle Stände konnten platziert werden. Bitte einzelne Plätze freigeben.", "error");
+              break;
+            }
+          }
+        }
+        for (const zone of ["indoor", "outdoor"]) {
+          const automaticRecords = state.records.filter(record => record.assignment?.zone === zone && record.assignment.automatic);
+          automaticRecords.forEach((record, index) => {
+            record.assignment = { zone, ...gridPosition(zone, index, automaticRecords.length), automatic: true };
+          });
+        }
+        render();
+        const open = state.records.filter(record => !record.isEvent && !record.assignment).length;
+        if (open === 0) showMessage("Alle Stände wurden verteilt. Die Standorte lassen sich noch per Ziehen anpassen.", "success");
+      }
+
+      function dropOnZone(event, zoneElement) {
+        event.preventDefault();
+        zoneElement.classList.remove("is-over");
+        const id = event.dataTransfer.getData("text/plain");
+        const record = state.records.find(item => item.id === id && !item.isEvent);
+        if (!record) return;
+        const bounds = zoneElement.getBoundingClientRect();
+        const x = Math.max(7, Math.min(93, ((event.clientX - bounds.left) / bounds.width) * 100));
+        const y = Math.max(13, Math.min(92, ((event.clientY - bounds.top) / bounds.height) * 100));
+        if (placeRecord(record, zoneElement.dataset.zone, { x, y })) {
+          state.selectedId = record.id;
+          render();
+        }
+      }
+
+      function csvCell(value) {
+        const text = String(value ?? "");
+        return /[",\r\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+      }
+
+      function exportCsv() {
+        if (!state.records.length) return;
+        const extraHeaders = ["Standort im Plan", "X im Plan (%)", "Y im Plan (%)", "Planstatus"];
+        const lines = [state.csvHeaders.concat(extraHeaders).map(csvCell).join(state.delimiter)];
+        for (const record of state.records) {
+          const extra = record.isEvent
+            ? ["Programmpunkt – kein Stand", "", "", "Programmpunkt"]
+            : record.assignment
+              ? [zoneInfo[record.assignment.zone].label, Math.round(record.assignment.x), Math.round(record.assignment.y), "Platziert"]
+              : ["", "", "", "Noch offen"];
+          lines.push(record.sourceRow.concat(extra).map(csvCell).join(state.delimiter));
+        }
+        const blob = new Blob(["\uFEFF", lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "Standplan_Zuweisungen.csv";
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      $("#csv-file").addEventListener("change", event => importCsv(event.target.files[0]));
+      $("#upload-box").addEventListener("dragover", event => { event.preventDefault(); $("#upload-box").classList.add("is-over"); });
+      $("#upload-box").addEventListener("dragleave", () => $("#upload-box").classList.remove("is-over"));
+      $("#upload-box").addEventListener("drop", event => {
+        event.preventDefault();
+        $("#upload-box").classList.remove("is-over");
+        importCsv(event.dataTransfer.files[0]);
+      });
+      $$(".zone", mapWrap).forEach(zone => {
+        zone.addEventListener("dragover", event => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; zone.classList.add("is-over"); });
+        zone.addEventListener("dragleave", event => { if (!zone.contains(event.relatedTarget)) zone.classList.remove("is-over"); });
+        zone.addEventListener("drop", event => dropOnZone(event, zone));
+        zone.addEventListener("click", event => {
+          if (event.target.closest(".marker")) return;
+          const record = state.records.find(item => item.id === state.selectedId && !item.isEvent);
+          if (!record) return;
+          const bounds = zone.getBoundingClientRect();
+          const x = Math.max(7, Math.min(93, ((event.clientX - bounds.left) / bounds.width) * 100));
+          const y = Math.max(13, Math.min(92, ((event.clientY - bounds.top) / bounds.height) * 100));
+          if (placeRecord(record, zone.dataset.zone, { x, y })) render();
+        });
+      });
+      $("#auto-button").addEventListener("click", autoAssign);
+      $("#clear-button").addEventListener("click", () => {
+        for (const record of state.records) record.assignment = null;
+        state.selectedId = null;
+        render();
+        showMessage("Alle Standorte wurden geleert.", "success");
+      });
+      $("#export-button").addEventListener("click", exportCsv);
+      $("#print-button").addEventListener("click", () => window.print());
+      $("#search-input").addEventListener("input", renderStandList);
+      $$(".filter-button").forEach(button => button.addEventListener("click", () => {
+        state.filter = button.dataset.filter;
+        $$(".filter-button").forEach(item => item.classList.toggle("is-active", item === button));
+        renderStandList();
+      }));
+      render();
+    })();
+  </script>
+</body>
+</html>
