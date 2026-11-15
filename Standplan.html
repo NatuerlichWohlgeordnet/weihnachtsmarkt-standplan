@@ -189,6 +189,7 @@
             <div class="upload-hint">Datei hier ablegen · UTF-8 oder Excel-CSV</div>
           </label>
           <input id="csv-file" type="file" accept=".csv,text/csv">
+          <button class="button button-quiet" id="test-csv-button" type="button" style="width: 100%; margin-top: 8px;">Test-CSV laden</button>
           <div class="file-status" id="file-status">Noch keine Datei geladen. Die CSV wird nur in diesem Browser verarbeitet.</div>
           <div class="message" id="message" role="status" aria-live="polite"></div>
         </section>
@@ -325,17 +326,9 @@
         message.className = `message is-visible message-${kind}`;
       }
 
-      function importCsv(file) {
-        if (!file) return;
-        if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") {
-          showMessage("Bitte eine CSV-Datei auswählen.", "error");
-          return;
-        }
-        const reader = new FileReader();
-        reader.onerror = () => showMessage("Die Datei konnte nicht gelesen werden. Bitte erneut auswählen.", "error");
-        reader.onload = () => {
-          try {
-            const parsed = parseCsv(String(reader.result || ""));
+      function loadCsvText(text, fileName) {
+        try {
+            const parsed = parseCsv(text);
             const indices = {
               area: headerIndex(parsed.headers, ["bereich", "jahrgang"]),
               name: headerIndex(parsed.headers, ["klasse_kurs", "klasse", "kurs", "gruppe"]),
@@ -373,7 +366,7 @@
             state.delimiter = parsed.delimiter;
             state.csvHeaders = parsed.headers;
             state.selectedId = null;
-            $("#file-status").textContent = `${file.name} · ${state.records.length} Einträge geladen`;
+            $("#file-status").textContent = `${fileName} · ${state.records.length} Einträge geladen`;
             $("#export-button").disabled = false;
             $("#auto-button").disabled = false;
             $("#clear-button").disabled = false;
@@ -381,11 +374,35 @@
             const standCount = state.records.filter(record => !record.isEvent).length;
             const eventCount = state.records.filter(record => record.isEvent).length;
             showMessage(`${standCount} Stände und ${eventCount} Programmpunkte erkannt.`, "success");
-          } catch (error) {
+        } catch (error) {
             showMessage(error.message || "Die CSV-Datei konnte nicht ausgewertet werden.", "error");
-          }
-        };
+        }
+      }
+
+      function importCsv(file) {
+        if (!file) return;
+        if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") {
+          showMessage("Bitte eine CSV-Datei auswählen.", "error");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => showMessage("Die Datei konnte nicht gelesen werden. Bitte erneut auswählen.", "error");
+        reader.onload = () => loadCsvText(String(reader.result || ""), file.name);
         reader.readAsText(file, "UTF-8");
+      }
+
+      async function loadTestCsv() {
+        const button = $("#test-csv-button");
+        button.disabled = true;
+        try {
+          const response = await fetch("weihnachtsmarkt_standplanung.csv", { cache: "no-store" });
+          if (!response.ok) throw new Error(`Die Test-CSV konnte nicht geladen werden (HTTP ${response.status}).`);
+          loadCsvText(await response.text(), "weihnachtsmarkt_standplanung.csv (Testdatei)");
+        } catch (error) {
+          showMessage(`${error.message || "Die Test-CSV konnte nicht geladen werden."} Bitte die CSV stattdessen auswählen.`, "error");
+        } finally {
+          button.disabled = false;
+        }
       }
 
       function visibleRecords() {
@@ -709,6 +726,7 @@
       }
 
       $("#csv-file").addEventListener("change", event => importCsv(event.target.files[0]));
+      $("#test-csv-button").addEventListener("click", loadTestCsv);
       $("#upload-box").addEventListener("dragover", event => { event.preventDefault(); $("#upload-box").classList.add("is-over"); });
       $("#upload-box").addEventListener("dragleave", () => $("#upload-box").classList.remove("is-over"));
       $("#upload-box").addEventListener("drop", event => {
